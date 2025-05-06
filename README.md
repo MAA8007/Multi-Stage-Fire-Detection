@@ -1,7 +1,5 @@
 # Early Prediction and Area Estimation of Stubble Burning in Punjab
 
-This repository contains the code and resources for a project focused on the early prediction of stubble burning events in Punjab and a planned extension for estimating the spatial extent of burned areas using deep learning and multi-modal satellite imagery.
-
 ## Project Overview
 
 Stubble burning, the post-harvest practice of setting fire to crop residue, is a major contributor to severe air pollution and seasonal smog in the Punjab region. This project initially explored stubble burning detection. However, the primary focus has pivoted to the more impactful challenge of **early prediction**, aiming to forecast where burning might occur, thereby enabling an Early Warning System. This shift necessitated significant changes in our data collection and modeling strategies.
