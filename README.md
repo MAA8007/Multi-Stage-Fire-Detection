@@ -1,14 +1,16 @@
 # Early Prediction and Area Estimation of Stubble Burning in Punjab
 
-This repository contains the code and resources for a project focused on the early prediction of stubble burning events in Punjab (Pakistan/India) and a planned extension for estimating the spatial extent of burned areas using deep learning and multi-modal satellite imagery.
+This repository contains the code and resources for a project focused on the early prediction of stubble burning events in Punjab and a planned extension for estimating the spatial extent of burned areas using deep learning and multi-modal satellite imagery.
 
 ## Project Overview
 
-Stubble burning, the post-harvest practice of setting fire to crop residue, is a major contributor to severe air pollution and seasonal smog in the Punjab region. This project aims to develop a system that can:
-1.  **Early Predict:** Forecast the likelihood of stubble burning on a specific agricultural field up to 10 days in advance using pre-burn temporal patterns from satellite data.
-2.  **Estimate Area (Future Work):** Segment and quantify the exact burned area after an event has occurred, using high-resolution satellite imagery.
+Stubble burning, the post-harvest practice of setting fire to crop residue, is a major contributor to severe air pollution and seasonal smog in the Punjab region. This project initially explored stubble burning *detection* but has pivoted to the more impactful challenge of **early prediction**, aiming to forecast where burning might occur (hence an Early Warning System) [user-provided text block on Stubble Burning Prediction]. This shift necessitated significant changes in our data collection and modeling strategies.
 
-We leverage Sentinel-2 (S2) optical imagery and Sentinel-1 (SAR) radar data, recognizing their complementary strengths, particularly SAR's ability to see through clouds. The core of our prediction model is a Dual-Input Transformer architecture, which has shown significant improvement over baseline methods.
+The project now aims to:
+1.  **Early Predict:** Forecast the likelihood of stubble burning on a specific agricultural field up to 10 days in advance using pre-burn temporal patterns from Sentinel-2 (S2) optical and Sentinel-1 (SAR) radar data [user-provided text block on Stubble Burning Prediction, deliverable4.ipynb].
+2.  **Estimate Area (Future Work):** Segment and quantify the exact burned area after an event has occurred, using high-resolution Sentinel-2 imagery and a SegFormer-based segmentation model, adapted through transfer learning from a forest fire segmentation task.
+
+We leverage the complementary strengths of S2 and SAR data for prediction, particularly SAR's ability to penetrate cloud cover [user-provided text block on Stubble Burning Prediction, deliverable4.ipynb]. The core of our prediction model is a Dual-Input Transformer architecture, which processes S2 and SAR data separately, significantly improving upon baseline methods [user-provided text block on Stubble Burning Prediction, deliverable4.ipynb].
 
 ## Project Pipeline
 
@@ -16,92 +18,51 @@ The project follows a comprehensive pipeline from data acquisition to model depl
 
 ### 1. Data Acquisition and Dataset Creation (using Google Earth Engine - GEE)
 
-* **Study Area:** Key agricultural zones in Punjab, Pakistan/India.
-* **Timeframe:** 2019-2024, focusing on the typical burning season (September-December), with data collection for prediction starting from June 1st each year.
+This project utilizes datasets created using Google Earth Engine (GEE). It has been designed to facilitate the **prediction** of stubble burning in the agricultural regions of Punjab. The process leverages satellite imagery and active fire observations spanning several years (2019-2024) to build a comprehensive collection of data representing both areas affected by burning and those that remained unburned [deliverable_2.ipynb].
+
+* **Geographical Scope & Timeframe:** The analysis focuses on a large area encompassing key agricultural zones within Punjab. We established a consistent timeframe for analysis each year, specifically the burning season which typically occurs between September and December. For the prediction task, data collection for each point starts from June 1st [deliverable_2.ipynb].
+* **Cropland Masking:** To ensure focus on agricultural activities, a pre-existing map identifying cropland areas was incorporated, effectively masking out non-agricultural land [deliverable_2.ipynb].
 * **Data Sources:**
-    * **Sentinel-2 (S2) MSI:** Optical data providing 10 spectral bands (B2, B3, B4, B5, B6, B7, B8, B8A, B11, B12) and 7 derived indices (NDVI, NDWI, NDRE, MSAVI, SAVI, NBR, BAIS2). Images with >40% cloud cover are excluded.
-    * **Sentinel-1 (SAR):** C-band Synthetic Aperture Radar data, providing VV and VH backscatter polarizations, derived ratios (RFDI, RVI), and texture features (VH\_contrast, VH\_entropy, VV\_contrast).
-* **Labeling (Prediction Task):**
-    * Burned points (`burn_status=1`): Identified where active fire locations (from MODIS/VIIRS) coincided with cropland areas during the burn season.
-    * Unburned points (`burn_status=0`): Randomly sampled within cropland areas, distanced from detected fires.
-    * A balanced dataset of 1051 unique burned and 1051 unburned field-year identifiers (`item_id`) common to both S2 and SAR was created after filtering for the prediction task.
-* **Notebook:** `eda.ipynb` details this process.
+    * **Sentinel-2 (S2) MSI:** Optical data providing 10 spectral bands (B2-B12) and 7 derived indices (NDVI, NDWI, NDRE, MSAVI, SAVI, NBR, BAIS2). S2 samples with >40% cloud cover were excluded as they would significantly distort metrics [deliverable_2.ipynb, deliverable4.ipynb].
+    * **Sentinel-1 (SAR):** C-band Synthetic Aperture Radar data, providing VV and VH backscatter, ratios (RFDI, RVI), and texture features. SAR is crucial due to its cloud penetration capabilities. This was utlized in the 2nd improvement [deliverable4.ipynb].
+* **Point Labeling & Feature Extraction (Prediction Task):** The core of the dataset generation process centered around identifying locations indicative of stubble burning. This was achieved by analyzing active fire data obtained from satellites. When these fire locations coincided with our defined cropland areas, they were labeled as 'burned' sample points. To provide a comparative dataset, 'unburned' sample points were selected as random locations within the cropland areas that were a certain distance away from any detected fires. Around each of these identified burned and unburned locations, small virtual buffer zones served as areas from which to extract relevant information from S2 imagery. From this optical imagery, key indicators such as the Normalized Difference Vegetation Index (NDVI) and the Normalized Burn Ratio (NBR) were calculated [deliverable_2.ipynb].
+* **Output:** The culmination of this process was the creation of a structured, tabular dataset, making it suitable for training DL models to distinguish between (or predict) burned and unburned agricultural fields [deliverable_2.ipynb]. For the prediction task, a balanced dataset of 1051 unique burned and 1051 unburned field-year identifiers (`item_id`) was used.
+* **Notebook:** `deliverable_2.ipynb` (formerly `eda.ipynb`) details this GEE process and initial EDA.
 
 ### 2. Data Preprocessing for Early Prediction
 
+The shift from detection to prediction required significant changes to our data collection process []:
 * **Temporal Cutoff:**
-    * *Burned Fields:* Time series data from June 1st up to 10 days *before* the confirmed burn date.
-    * *Unburned Fields:* Time series data from June 1st up to September 15th of the respective year. This prevents the model from learning post-harvest patterns not available in a forecasting scenario.
-* **Temporal Splitting:** To ensure robust evaluation and prevent data leakage from future years, the data is split strictly by year:
+    * *Burned Fields:* Time series data collected from June 1st up to 10 days *before* the confirmed burn date.
+    * *Unburned Fields:* Time series data collected from June 1st up to September 15th of the respective year. This ensures the model learns from pre-burn indicators only [deliverable4.ipynb].
+* **Temporal Splitting:** A strict year-based temporal split was utilized to ensure the model generalizes well and is not memorizing year-specific patterns:
     * Training: 2019, 2020, 2021, 2022 (1410 fields)
-    * Validation: 2024 (342 fields)
-    * Testing: 2023 (350 fields)
+    * Validation: 2023 (350 fields)
+    * Testing: 2024 (342 fields) [deliverable4.ipynb].
 * **Sequence Preparation:**
-    * Data is sorted chronologically for each `item_id`.
-    * Missing values within each time series are imputed using the series mean.
-    * Features are scaled using `StandardScaler` (fitted only on the training set).
-    * Sequences are padded/truncated to fixed lengths: 30 steps for S2, 60 for SAR.
+    * Data sorted chronologically. Missing values imputed using series mean. Features scaled using `StandardScaler` (fitted only on training). Sequences padded/truncated: S2 to 30 steps, SAR to 60 steps.
 
 ### 3. Modeling for Early Prediction
 
-* **Baseline Model (S2 Transformer - Detection Task):**
-    * An initial Transformer model using only normalized Sentinel-2 sequences (15 steps) for *burn detection*.
-    * Achieved high validation F1 (~0.99), demonstrating Transformer viability.
-    * **Notebook:** `deliverable_3 (4).ipynb`
+* **Baseline Model (S2 Transformer - Original Detection Task):**
+    * An initial Transformer model using only normalized Sentinel-2 sequences for *burn detection*.
+    * **Notebook:** `deliverable_3.ipynb` (formerly `deliverable_3 (4).ipynb`).
 * **Random Forest Baseline (Prediction Task):**
-    * Trained on 96 static statistical features (mean, std, min, max per S2/SAR feature).
-    * Performance: 50% Accuracy, 0.00 F1-Score on the 2023 test set, indicating insufficiency of static features for prediction.
+    * Trained on static statistical features. Compared against the Transformer to show its effectiveness. Performance: 50% Accuracy, 0.00 F1-Score.
 * **Dual-Input Transformer (Prediction Task - Main Model):**
-    * Processes S2 and SAR time series in parallel branches.
-    * Architecture: Embedding -> Positional Encoding -> Transformer Encoder Block(s) (1 layer, 2 heads, 128 FF units) -> Global Average Pooling -> Concatenation -> Dense Layers for classification.
-    * Includes L2 regularization and Dropout (0.4) to mitigate overfitting.
+    * Instead of a vanilla, single-input transformer, a Dual-Input Transformer is used, utilizing both SAR and S2 data. This approach was chosen because SAR and S2 satellites do not orbit over a single location at the same time, and fusing datasets would lead to discarding many SAR samples due to S2 cloud cover issues (>40% cloud cover samples were excluded).
+    * Architecture: Parallel S2/SAR branches (Embedding -> Positional Encoding -> Transformer Encoder -> Pooling) -> Concatenation -> Dense Layers.
+    * Addressed initial drastic overfitting (test accuracy ~70%) by incorporating dropout and regularization, leading to markedly better results.
     * Performance (2023 Test Set): ≈99.14% Accuracy, ≈0.9915 F1-Score.
-    * **Notebook:** `deliverable4 (3).ipynb`
+    * **Notebook:** `deliverable4.ipynb` (formerly `deliverable4 (3).ipynb`).
 
 ### 4. Burned Area Segmentation (Future Work)
 
-To complement the prediction of *likelihood*, this phase aims to estimate the *spatial extent* of burned areas after an event.
-* **Model:** U-Net architecture with a ResNet34 backbone.
-* **Input:** Post-burn Sentinel-2 imagery patches.
-* **Training:** Will involve transfer learning, fine-tuning a pre-trained ResNet34 encoder on a custom dataset of S2 burn scar images and ground-truth masks.
-* **Evaluation:** Intersection over Union (IoU) metric.
-* **Notebook (Prototype):** `Untitled-2 _1_-3.ipynb`
+To complement the prediction of *likelihood*, this phase aims to estimate the *spatial extent* of burned areas post-event using image segmentation. Image segmentation is crucial for precise spatial quantification, detailed mapping, change detection, and targeted analysis of environmental events like fires.
+* **Model:** SegFormer architecture (as prototyped with a U-Net/ResNet34 previously). The current focus is on segmenting forest fires using the CEMS Wildfires dataset, with plans to adapt this for stubble burning.
+* **Input Enhancement:** Incorporates spectral indices (NBR and NDVI) as additional input channels alongside raw Sentinel-2 bands to better distinguish burned areas from spectrally similar features.
+* **Training Strategy (for Stubble Burning):** **Transfer Learning / Fine-tuning**. The model pre-trained on the CEMS forest fire dataset (which learns features for identifying burned biomass from S2 data) will be fine-tuned on a new dataset specifically containing examples of stubble burning events. This approach is data-efficient, time-efficient, and often leads to better performance.
+* **Dataset (Initial Task):** CEMS Wildfires dataset (`links-ads/wildfires-cems`) for forest fire segmentation.
+* **Notebook (Forest Fire Segmentation & Transfer Learning Plan):** `final_improvement.ipynb`.
 
-
-## Getting Started
-
-1.  **Clone the repository:**
-    ```bash
-    git clone [Your GitHub Link Here]
-    cd [repository-name]
-    ```
-2.  **Set up environment:** (Provide instructions, e.g., conda environment.yml or requirements.txt)
-3.  **Data:** Download preprocessed data from [link if available] or run GEE scripts in `data/` (if provided). Place CSVs in a directory and update `DATA_DIR` in `deliverable4 (3).ipynb`.
-4.  **Run Notebooks:**
-    * Explore data creation in `eda.ipynb`.
-    * See the baseline detection model in `deliverable_3 (4).ipynb`.
-    * Run `deliverable4 (3).ipynb` for the main prediction model training and evaluation.
-    * Review the segmentation prototype in `Untitled-2 _1_-3.ipynb`.
-
-## Key Findings & Contributions
-
-* **Early Prediction Feasibility:** Demonstrated that stubble burning can be predicted with high accuracy (≈99%) up to 10 days in advance using multi-modal satellite time series.
-* **Dual-Input Transformer Efficacy:** Showcased the superiority of a sequence-based Dual-Input Transformer over static feature models (Random Forest) for capturing predictive temporal patterns.
-* **Multi-Modal Advantage:** Integrated S2 optical and SAR radar data, leveraging SAR's cloud-penetrating capabilities for more robust analysis.
-* **Temporal Validation:** Employed a strict temporal split (training on 2019-2022, testing on 2023, validating on 2024) to ensure model generalization to unseen years.
-* **Comprehensive Pipeline:** Outlined an end-to-end approach from GEE-based dataset creation to prediction, with a clear path towards future integration of burned area segmentation for spatial extent estimation.
-
-## Future Work
-
-* Fully implement and evaluate the U-Net based burned area segmentation model with a ResNet34 backbone using transfer learning.
-* Create and curate a high-quality labeled dataset for burned area segmentation specific to the Punjab region.
-* Investigate the optimal prediction window (currently 10 days pre-burn).
-* Explore incorporating additional data sources (e.g., meteorological data, soil moisture) to potentially enhance prediction accuracy and lead time.
-* Refine model architectures and hyperparameter tuning.
-
-## Acknowledgements
-Muhammad Ashhad Ali (Project Partner)
-ashhadali7703@gmail.com
-
-## Contact
-arsalanmalik900@outlook.com
+## Repository Structure
