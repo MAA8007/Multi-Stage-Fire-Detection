@@ -6,13 +6,13 @@ Stubble burning, the post-harvest practice of setting fire to crop residue, is a
 
 The project now aims to:
 1.  **Early Predict:** Forecast the likelihood of stubble burning on a specific agricultural field up to 10 days in advance using pre-burn temporal patterns from Sentinel-2 (S2) optical and Sentinel-1 (SAR) radar data.
-2.  **Estimate Area (Future Work):** Segment and quantify the exact burned area after an event has occurred, using high-resolution Sentinel-2 imagery and an advanced segmentation model, adapted through transfer learning.
+2.  **Estimate Area:** Segment and quantify the exact burned area after an event has occurred, using high-resolution Sentinel-2 imagery and an advanced segmentation model, adapted through transfer learning.
 
 We leverage the complementary strengths of S2 and SAR data for prediction, particularly SAR's ability to penetrate cloud cover, which often limits optical data quality. The core of our prediction model is a Dual-Input Transformer architecture, which processes S2 and SAR data separately to account for their asynchronous acquisition and to avoid data loss from merging. This approach has shown significant improvement over baseline methods.
 
 ## Project Pipeline
 
-The project follows a comprehensive pipeline from data acquisition to model deployment and future enhancements:
+The project follows a comprehensive pipeline:
 
 ### 1. Data Acquisition and Dataset Creation (using Google Earth Engine - GEE)
 
