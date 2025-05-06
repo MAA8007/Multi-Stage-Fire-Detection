@@ -7,10 +7,10 @@ This repository contains the code and resources for a project focused on the ear
 Stubble burning, the post-harvest practice of setting fire to crop residue, is a major contributor to severe air pollution and seasonal smog in the Punjab region. This project initially explored stubble burning *detection* but has pivoted to the more impactful challenge of **early prediction**, aiming to forecast where burning might occur (hence an Early Warning System) [user-provided text block on Stubble Burning Prediction]. This shift necessitated significant changes in our data collection and modeling strategies.
 
 The project now aims to:
-1.  **Early Predict:** Forecast the likelihood of stubble burning on a specific agricultural field up to 10 days in advance using pre-burn temporal patterns from Sentinel-2 (S2) optical and Sentinel-1 (SAR) radar data [user-provided text block on Stubble Burning Prediction, deliverable4.ipynb].
-2.  **Estimate Area (Future Work):** Segment and quantify the exact burned area after an event has occurred, using high-resolution Sentinel-2 imagery and a SegFormer-based segmentation model, adapted through transfer learning from a forest fire segmentation task.
+1.  **Early Predict:** Forecast the likelihood of stubble burning on a specific agricultural field up to 10 days in advance using pre-burn temporal patterns from Sentinel-2 (S2) optical and Sentinel-1 (SAR) radar data [deliverable4.ipynb].
+2.  **Estimate Area :** Segment and quantify the exact burned area after an event has occurred, using high-resolution Sentinel-2 imagery and a SegFormer-based segmentation model, adapted through transfer learning from a forest fire segmentation task.
 
-We leverage the complementary strengths of S2 and SAR data for prediction, particularly SAR's ability to penetrate cloud cover [user-provided text block on Stubble Burning Prediction, deliverable4.ipynb]. The core of our prediction model is a Dual-Input Transformer architecture, which processes S2 and SAR data separately, significantly improving upon baseline methods [user-provided text block on Stubble Burning Prediction, deliverable4.ipynb].
+We leverage the complementary strengths of S2 and SAR data for prediction, particularly SAR's ability to penetrate cloud cover [deliverable4.ipynb]. The core of our prediction model is a Dual-Input Transformer architecture, which processes S2 and SAR data separately, significantly improving upon baseline methods [deliverable4.ipynb].
 
 ## Project Pipeline
 
