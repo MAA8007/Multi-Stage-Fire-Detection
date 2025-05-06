@@ -80,5 +80,5 @@ To complement the prediction of *likelihood*, this phase aims to estimate the *s
 Ashhad Ali (My esteemed project partner)
 
 ## Contact
-Muhammad Arsalan Amjad: arsalanmalik900@outlook.com
-Ashhad Ali: 26100023@lums.edu.pk
+* Muhammad Arsalan Amjad: arsalanmalik900@outlook.com | www.linkedin.com/in/arsalan8
+* Ashhad Ali: 26100023@lums.edu.pk | https://www.linkedin.com/in/muhammad-ashhad-ali/
